@@ -83,7 +83,7 @@ export function ReceiveModal({ open, onOpenChange, coinSymbol, onReceive }: Rece
             <p className="text-sm text-muted-foreground">Share this address with others to receive {coinSymbol}</p>
           </div>
 
-          <div className="border-t pt-4">
+          {/* <div className="border-t pt-4">
             <div className="space-y-3">
               <Label htmlFor="simulate-amount">Simulate Receiving {coinSymbol}</Label>
               <Input
@@ -103,7 +103,7 @@ export function ReceiveModal({ open, onOpenChange, coinSymbol, onReceive }: Rece
                 This simulates receiving {coinSymbol} for demo purposes
               </p>
             </div>
-          </div>
+          </div> */}
 
           <div className="flex gap-3 pt-4">
             <Button type="button" variant="outline" onClick={handleClose} className="flex-1 bg-transparent">
