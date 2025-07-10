@@ -295,7 +295,7 @@ export default function DashboardContent() {
         />
         
         {/* Additional Token Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 bg-green-50 rounded-lg border border-green-200">
             <div className="text-sm font-medium text-green-800">USD Equivalent</div>
             <div className="text-2xl font-bold text-green-900">
@@ -316,7 +316,7 @@ export default function DashboardContent() {
               ${userData.marketCap.toLocaleString()}
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Token Supply Info */}
         <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
@@ -342,7 +342,7 @@ export default function DashboardContent() {
         </div>
 
         {/* Refresh Button */}
-        <div className="flex justify-end">
+        {/* <div className="flex justify-end">
           <button
             onClick={loadUserData}
             disabled={loading}
@@ -350,7 +350,7 @@ export default function DashboardContent() {
           >
             {loading ? "Refreshing..." : "Refresh Data"}
           </button>
-        </div>
+        </div> */}
       </div>
 
       <QuestSection
@@ -375,6 +375,16 @@ export default function DashboardContent() {
         coinSymbol={userData.coinSymbol}
         onReceive={handleReceiveCoins}
       />
+
+      <div className="flex justify-end">
+        <button
+          onClick={loadUserData}
+          disabled={loading}
+          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 disabled:opacity-50"
+        >
+          {loading ? "Refreshing..." : "Refresh Data"}
+        </button>
+      </div>
     </div>
   )
 }
