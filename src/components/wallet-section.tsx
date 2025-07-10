@@ -22,12 +22,12 @@ export function WalletSection({ coins, coinValue, coinSymbol, onSendClick, onRec
         <div className="text-3xl font-light">
           {coins.toLocaleString()} {coinSymbol}
         </div>
-        <p className="text-sm text-muted-foreground">
+        {/* <p className="text-sm text-muted-foreground">
           ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
-        </p>
+        </p> */}
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2">
+        {/* <div className="grid gap-4 md:grid-cols-2">
           <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <Coins className="h-5 w-5 text-primary" />
@@ -49,7 +49,7 @@ export function WalletSection({ coins, coinValue, coinSymbol, onSendClick, onRec
               <div className="font-medium">${coinValue}</div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         <div className="flex gap-4 pt-4 border-t">
           <Button onClick={onSendClick} size="lg" className="flex-1 rounded-full">
