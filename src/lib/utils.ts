@@ -95,6 +95,63 @@ export async function updateWalletBalance(walletId: string, newBalance: number) 
   return wallet;
 }
 
+// Calculate total circulating supply for a token
+export async function calculateCirculatingSupply(tokenId: string) {
+  const wallets = await pb.collection('wallets').getFullList({
+    filter: `token="${tokenId}"`
+  });
+  
+  const totalSupply = wallets.reduce((total, wallet) => total + (wallet.balance || 0), 0);
+  return totalSupply;
+}
+
+// Update token circulating supply
+export async function updateTokenSupply(tokenId: string, newCirculatingSupply: number) {
+  const token = await pb.collection('tokens').update(tokenId, {
+    circulating_supply: newCirculatingSupply
+  });
+  
+  return token;
+}
+
+// Calculate token price based on formula: $0.05 * (Max Supply / Circulating Supply)
+export function calculateTokenPrice(maxSupply: number, circulatingSupply: number) {
+  const BASE_PRICE = 0.05;
+  
+  if (circulatingSupply === 0) {
+    return BASE_PRICE;
+  }
+  
+  const price = BASE_PRICE * (maxSupply / circulatingSupply);
+  return parseFloat(price.toFixed(6)); // Round to 6 decimal places
+}
+
+// Calculate market capitalization
+export function calculateMarketCap(price: number, circulatingSupply: number) {
+  return parseFloat((price * circulatingSupply).toFixed(2));
+}
+
+// Get token statistics
+export async function getTokenStats(tokenId?: string) {
+  const token = tokenId ? await pb.collection('tokens').getOne(tokenId) : await getValidatedToken();
+  
+  const circulatingSupply = await calculateCirculatingSupply(token.id);
+  const maxSupply = token.max_supply || 1000000; // Default max supply
+  const price = calculateTokenPrice(maxSupply, circulatingSupply);
+  const marketCap = calculateMarketCap(price, circulatingSupply);
+  
+  // Update token with latest circulating supply
+  await updateTokenSupply(token.id, circulatingSupply);
+  
+  return {
+    token: token,
+    circulatingSupply: circulatingSupply,
+    maxSupply: maxSupply,
+    price: price,
+    marketCap: marketCap
+  };
+}
+
 // Mint tokens to user
 export async function mint(email: string, amount: number) {
   const token = await getValidatedToken();
@@ -104,11 +161,15 @@ export async function mint(email: string, amount: number) {
   const newBalance = wallet.balance + amount;
   const updatedWallet = await updateWalletBalance(wallet.id, newBalance);
   
+  // Get updated token stats
+  const stats = await getTokenStats(token.id);
+  
   return {
     user: user,
     wallet: updatedWallet,
     mintedAmount: amount,
-    newBalance: newBalance
+    newBalance: newBalance,
+    tokenStats: stats
   };
 }
 
@@ -161,6 +222,9 @@ export async function distribute(fromEmail: string, toEmail: string, amount: num
   const updatedFromWallet = await updateWalletBalance(fromWallet.id, newFromBalance);
   const updatedToWallet = await updateWalletBalance(toWallet.id, newToBalance);
   
+  // Get updated token stats (circulating supply doesn't change in transfers)
+  const stats = await getTokenStats(token.id);
+  
   return {
     fromUser: fromUser,
     toUser: toUser,
@@ -169,25 +233,9 @@ export async function distribute(fromEmail: string, toEmail: string, amount: num
     token: token,
     transferAmount: amount,
     fromBalance: newFromBalance,
-    toBalance: newToBalance
+    toBalance: newToBalance,
+    tokenStats: stats
   };
-}
-
-// Test connection to Pocketbase
-export async function testConnection() {
-  const health = await pb.health.check();
-  return health;
-}
-
-// Get all records for debugging
-export async function debugRecords() {
-  const [tokens, users, wallets] = await Promise.all([
-    pb.collection('tokens').getFullList(),
-    pb.collection('users').getFullList({ fields: '*' }),
-    pb.collection('wallets').getFullList()
-  ]);
-  
-  return { tokens, users, wallets };
 }
 
 // Burn tokens from user wallet
@@ -209,13 +257,34 @@ export async function burn(email: string, amount: number) {
   const newBalance = wallet.balance - amount;
   const updatedWallet = await updateWalletBalance(wallet.id, newBalance);
   
+  // Get updated token stats
+  const stats = await getTokenStats(token.id);
+  
   return {
     user: user,
     wallet: updatedWallet,
     burnedAmount: amount,
     newBalance: newBalance,
-    previousBalance: wallet.balance
+    previousBalance: wallet.balance,
+    tokenStats: stats
   };
+}
+
+// Test connection to Pocketbase
+export async function testConnection() {
+  const health = await pb.health.check();
+  return health;
+}
+
+// Get all records for debugging
+export async function debugRecords() {
+  const [tokens, users, wallets] = await Promise.all([
+    pb.collection('tokens').getFullList(),
+    pb.collection('users').getFullList({ fields: '*' }),
+    pb.collection('wallets').getFullList()
+  ]);
+  
+  return { tokens, users, wallets };
 }
 
 // Utility function for CSS classes
