@@ -1,7 +1,6 @@
 "use client"
-
 import { useState } from "react"
-import { initializeLoyalty, getBalance, mint, distribute, burn, debugRecords, testConnection } from "@/lib/utils"
+import { initializeLoyalty, getBalance, mint, distribute, burn, getTokenStats, debugRecords, testConnection } from "@/lib/utils"
 
 export default function LoyaltyTest() {
   const [email, setEmail] = useState("")
@@ -18,12 +17,29 @@ export default function LoyaltyTest() {
   const [mintResult, setMintResult] = useState<any>(null)
   const [distributeResult, setDistributeResult] = useState<any>(null)
   const [burnResult, setBurnResult] = useState<any>(null)
+  const [tokenStats, setTokenStats] = useState<any>(null)
 
   // Reset error state
   const clearError = () => setError(null)
 
   // Set loading state
   const setLoadingState = (isLoading: boolean) => setLoading(isLoading)
+
+  // Handle get token stats
+  const handleGetTokenStats = async () => {
+    setLoadingState(true)
+    clearError()
+    
+    try {
+      const stats = await getTokenStats()
+      setTokenStats(stats)
+      console.log("✅ Token stats retrieved:", stats)
+    } catch (err: any) {
+      setError(`Get token stats failed: ${err.message || err}`)
+    } finally {
+      setLoadingState(false)
+    }
+  }
 
   // Handle test connection
   const handleTestConnection = async () => {
@@ -107,6 +123,7 @@ export default function LoyaltyTest() {
     try {
       const result = await mint(email, amount)
       setMintResult(result)
+      setTokenStats(result.tokenStats)
       console.log("✅ Mint successful:", result)
     } catch (err: any) {
       setError(`Mint failed: ${err.message || err}`)
@@ -134,6 +151,7 @@ export default function LoyaltyTest() {
     try {
       const result = await distribute(fromEmail, toEmail, amount)
       setDistributeResult(result)
+      setTokenStats(result.tokenStats)
       console.log("✅ Distribute successful:", result)
     } catch (err: any) {
       setError(`Distribute failed: ${err.message || err}`)
@@ -161,6 +179,7 @@ export default function LoyaltyTest() {
     try {
       const result = await burn(email, amount)
       setBurnResult(result)
+      setTokenStats(result.tokenStats)
       console.log("✅ Burn successful:", result)
     } catch (err: any) {
       setError(`Burn failed: ${err.message || err}`)
@@ -170,13 +189,14 @@ export default function LoyaltyTest() {
   }
 
   return (
-    <div className="p-6 max-w-md mx-auto bg-white rounded-lg shadow-md">
+    <div className="p-6 max-w-2xl mx-auto bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-4">Loyalty SDK Test</h2>
       
       <ConnectionTestSection 
         loading={loading}
         onTestConnection={handleTestConnection}
         onDebugRecords={handleDebugRecords}
+        onGetTokenStats={handleGetTokenStats}
       />
       
       <InitializeSection 
@@ -184,6 +204,13 @@ export default function LoyaltyTest() {
         initialized={initialized}
         onSecretKeyChange={setSecretKey}
         onInitialize={handleInitialize}
+      />
+
+      <TokenStatsSection 
+        tokenStats={tokenStats}
+        loading={loading}
+        initialized={initialized}
+        onGetStats={handleGetTokenStats}
       />
 
       <MintSection 
@@ -238,10 +265,11 @@ export default function LoyaltyTest() {
 }
 
 // Connection test component
-function ConnectionTestSection({ loading, onTestConnection, onDebugRecords }: {
+function ConnectionTestSection({ loading, onTestConnection, onDebugRecords, onGetTokenStats }: {
   loading: boolean
   onTestConnection: () => void
   onDebugRecords: () => void
+  onGetTokenStats: () => void
 }) {
   return (
     <div className="mb-6">
@@ -258,6 +286,62 @@ function ConnectionTestSection({ loading, onTestConnection, onDebugRecords }: {
         className="ml-2 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 disabled:opacity-50"
       >
         {loading ? "Loading..." : "Debug Records"}
+      </button>
+      <button
+        onClick={onGetTokenStats}
+        disabled={loading}
+        className="ml-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+      >
+        {loading ? "Loading..." : "Get Token Stats"}
+      </button>
+    </div>
+  )
+}
+
+// Token stats section component
+function TokenStatsSection({ tokenStats, loading, initialized, onGetStats }: {
+  tokenStats: any
+  loading: boolean
+  initialized: boolean
+  onGetStats: () => void
+}) {
+  return (
+    <div className="mb-6">
+      <h3 className="text-lg font-semibold mb-2">Token Statistics</h3>
+      {tokenStats && (
+        <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 rounded">
+          <div>
+            <p className="text-sm text-gray-600">Token Name</p>
+            <p className="font-semibold">{tokenStats.token.name || 'Unknown'}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Symbol</p>
+            <p className="font-semibold">{tokenStats.token.symbol || 'N/A'}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Circulating Supply</p>
+            <p className="font-semibold">{tokenStats.circulatingSupply.toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Max Supply</p>
+            <p className="font-semibold">{tokenStats.maxSupply.toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Price</p>
+            <p className="font-semibold">${tokenStats.price}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Market Cap</p>
+            <p className="font-semibold">${tokenStats.marketCap.toLocaleString()}</p>
+          </div>
+        </div>
+      )}
+      <button
+        onClick={onGetStats}
+        disabled={loading || !initialized}
+        className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+      >
+        {loading ? "Loading..." : "Refresh Stats"}
       </button>
     </div>
   )
