@@ -35,13 +35,13 @@ export function SendModal({ open, onOpenChange, maxAmount, coinSymbol, onSend }:
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Recipient Email</Label>
+            <Label htmlFor="email">Recipient Wallet Address</Label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="recipient@example.com"
+              placeholder="0x1abc...78"
             />
           </div>
           <div className="space-y-2">
