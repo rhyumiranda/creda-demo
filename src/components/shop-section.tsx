@@ -20,7 +20,7 @@ interface MysteryBox {
 
 interface ShopSectionProps {
   coins: number
-  onPurchase: (cost: number) => boolean
+  onPurchase: (cost: number) => Promise<boolean>
 }
 
 const mysteryBoxes: MysteryBox[] = [
@@ -88,8 +88,8 @@ export function ShopSection({ coins, onPurchase }: ShopSectionProps) {
     reward: "",
   })
 
-  const handlePurchase = (box: MysteryBox) => {
-    const success = onPurchase(box.cost)
+  const handlePurchase = async (box: MysteryBox) => {
+    const success = await onPurchase(box.cost)
     if (success) {
       // Simulate random reward
       const randomReward = rewards[Math.floor(Math.random() * rewards.length)]
